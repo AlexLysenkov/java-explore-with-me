@@ -1,5 +1,7 @@
 package ru.practicum;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.dto.EndpointHitDto;
+import ru.practicum.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,7 +36,7 @@ public class StatsClient {
         return makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
     }
 
-    public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String startStr = start.format(formatter);
         String endStr = end.format(formatter);
@@ -41,7 +44,10 @@ public class StatsClient {
         Map<String, Object> parameters = Map.of("start", startStr, "end", endStr, "uris", urisStr,
                 "unique", unique);
         String path = String.format("/stats?start=%s&end=%s&uris=%s&unique=%s", startStr, endStr, urisStr, unique);
-        return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue(restTemplate.exchange(path, HttpMethod.GET,
+                null, Object.class, parameters).getBody(), new TypeReference<>() {
+        });
     }
 
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path,

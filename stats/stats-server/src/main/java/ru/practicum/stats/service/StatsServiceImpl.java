@@ -3,6 +3,7 @@ package ru.practicum.stats.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.stats.mapper.EndpointHitMapper;
@@ -15,10 +16,12 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class StatsServiceImpl implements StatsService {
     private final StatsRepository statsRepository;
 
     @Override
+    @Transactional
     public EndpointHitDto createHit(EndpointHitDto endpointHitDto) {
         EndpointHit endpointHit = statsRepository.save(EndpointHitMapper.toEndpointHit(endpointHitDto));
         log.info("Создан новый EndpointHit {}", endpointHitDto);
