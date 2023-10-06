@@ -25,7 +25,7 @@ import java.util.Map;
 public class StatsClient {
     private final RestTemplate restTemplate;
 
-    public StatsClient(@Value("${stats.stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
         this.restTemplate = builder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
