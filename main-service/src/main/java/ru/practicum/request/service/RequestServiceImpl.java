@@ -40,9 +40,9 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new ObjectNotFoundException(String.format(USER_NOT_FOUND, userId)));
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
+        Event event = eventRepository.lockById(eventId).orElseThrow(() ->
                 new ObjectNotFoundException(String.format(EVENT_NOT_FOUND, eventId)));
-        if (requestRepository.findByRequesterIdAndEventId(userId, eventId) != null) {
+        if (requestRepository.existsById(userId) && requestRepository.existsById(eventId)) {
             throw new ConflictException("Повторная заявка");
         }
         if (event.getInitiator().getId().equals(userId)) {
@@ -95,12 +95,11 @@ public class RequestServiceImpl implements RequestService {
     public EventRequestStatusUpdateResultDto updateRequestStatus(Long userId, Long eventId,
                                                                  EventRequestStatusUpdateRequestDto request) {
         checkUserExistsById(userId);
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
+        Event event = eventRepository.lockById(eventId).orElseThrow(() ->
                 new ObjectNotFoundException(String.format(EVENT_NOT_FOUND, eventId)));
         List<Request> requestList = requestRepository.findAllByIdIn(request.getRequestIds());
         EventRequestStatusUpdateResultDto result = EventRequestStatusUpdateResultDto.builder().build();
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-//            result.getConfirmedRequests().addAll(RequestMapper.listParticipationToDto(requestList));
             return result;
         }
         if (!event.getInitiator().getId().equals(userId)) {

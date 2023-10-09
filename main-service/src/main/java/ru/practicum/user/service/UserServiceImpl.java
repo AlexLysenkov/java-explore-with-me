@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getUsersByIds(List<Long> ids, Integer from, Integer size) {
-        Pageable pageable = new CustomPageRequest(from / size, size);
+        Pageable pageable = new CustomPageRequest(from, size);
         List<User> users;
         if (ids == null || ids.isEmpty()) {
             users = userRepository.findAll(pageable).toList();

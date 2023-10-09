@@ -52,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getAllCategories(Integer from, Integer size) {
-        Pageable pageable = new CustomPageRequest(from / size, size);
+        Pageable pageable = new CustomPageRequest(from, size);
         log.info("Получен список категорий с параметрами from = {}, size = {}", from, size);
         return CategoryMapper.listCategoriesToListDto(categoryRepository.findAll(pageable).toList());
     }

@@ -73,8 +73,6 @@ public class EventServiceImpl implements EventService {
         }
         Event newEvent = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(newEvent);
-        eventFullDto.setViews(0L);
-        eventFullDto.setConfirmedRequests(0L);
         log.info("Event с id: {} создан", event.getId());
         return eventFullDto;
     }
@@ -196,7 +194,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getAllEventsByInitiatorId(Long userId, Integer from, Integer size) {
         checkUserExistsById(userId);
-        Pageable pageable = new CustomPageRequest(from / size, size);
+        Pageable pageable = new CustomPageRequest(from, size);
         List<Event> eventList = eventRepository.findAllByInitiatorId(userId, pageable);
         List<EventShortDto> eventShortList = eventList.stream().map(EventMapper::toEventShortDto)
                 .collect(Collectors.toList());
@@ -223,21 +221,14 @@ public class EventServiceImpl implements EventService {
                 try {
                     EventState.valueOf(state);
                 } catch (IllegalArgumentException e) {
-                    throw new ValidationException("Неизвестный статус");
+                    throw new ValidationException("Неизвестный статус: " + state);
                 }
             }
         }
-        Pageable pageable = new CustomPageRequest(from / size, size);
+        Pageable pageable = new CustomPageRequest(from, size);
         List<Event> eventList = eventRepository.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd,
                 pageable);
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList);
-        Map<Long, Long> views = getViews(eventList);
-        List<EventFullDto> eventFullList = eventList.stream().map(EventMapper::toEventFullDto)
-                .collect(Collectors.toList());
-        for (EventFullDto eventFullDto : eventFullList) {
-            eventFullDto.setViews(views.getOrDefault(eventFullDto.getId(), 0L));
-            eventFullDto.setConfirmedRequests(confirmedRequests.getOrDefault(eventFullDto.getId(), 0L));
-        }
+        List<EventFullDto> eventFullList = setFullDtoAdditionalFields(eventList);
         log.info("Получен список events от admin");
         return eventFullList;
     }
@@ -278,18 +269,12 @@ public class EventServiceImpl implements EventService {
                 .ip(ip)
                 .timestamp(LocalDateTime.now())
                 .build());
-        Pageable pageable = new CustomPageRequest(from / size, size);
+        Pageable pageable = new CustomPageRequest(from, size);
         List<Event> eventList = eventRepository.findEventsByUser(text, categories, paid, rangeStart != null ?
                 rangeStart : LocalDateTime.now(), rangeEnd, pageable);
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList);
-        Map<Long, Long> views = getViews(eventList);
-        List<EventShortDto> eventShortDtoList = EventMapper.toEventShortDtoList(eventList);
+        List<EventShortDto> eventShortDtoList = setShortDtoAdditionalFields(eventList);
         Map<Long, Integer> eventsParticipant = new HashMap<>();
         eventList.forEach(event -> eventsParticipant.put(event.getId(), event.getParticipantLimit()));
-        for (EventShortDto eventShortDto : eventShortDtoList) {
-            eventShortDto.setViews(views.getOrDefault(eventShortDto.getId(), 0L));
-            eventShortDto.setConfirmedRequests(confirmedRequests.getOrDefault(eventShortDto.getId(), 0L));
-        }
         if (onlyAvailable) {
             eventShortDtoList = eventShortDtoList.stream().filter(eventShortDto ->
                     (eventsParticipant.get(eventShortDto.getId()) == 0 || eventsParticipant.get(eventShortDto.getId())
@@ -298,8 +283,9 @@ public class EventServiceImpl implements EventService {
         if (sort != null) {
             switch (sort) {
                 case EVENT_DATE:
-                    eventShortDtoList.sort(Comparator.comparing(EventShortDto::getEventDate));
-                    break;
+                    eventList = eventRepository.findEventsSortedByEventDate(text, categories, paid,
+                            rangeStart, rangeEnd, pageable);
+                    return eventList.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
                 case VIEWS:
                     eventShortDtoList.sort(Comparator.comparing(EventShortDto::getViews));
                     break;
@@ -309,6 +295,22 @@ public class EventServiceImpl implements EventService {
         }
         log.info("Получен список events от user");
         return eventShortDtoList;
+    }
+
+    private List<EventFullDto> setFullDtoAdditionalFields(List<Event> eventList) {
+        Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList);
+        Map<Long, Long> views = getViews(eventList);
+        return eventList.stream().map(event ->
+                EventMapper.eventToFullDto(event, views.getOrDefault(event.getId(), 0L),
+                        confirmedRequests.getOrDefault(event.getId(), 0L))).collect(Collectors.toList());
+    }
+
+    private List<EventShortDto> setShortDtoAdditionalFields(List<Event> eventList) {
+        Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList);
+        Map<Long, Long> views = getViews(eventList);
+        return eventList.stream().map(event ->
+                EventMapper.eventToShortDto(event, views.getOrDefault(event.getId(), 0L),
+                        confirmedRequests.getOrDefault(event.getId(), 0L))).collect(Collectors.toList());
     }
 
     @Override

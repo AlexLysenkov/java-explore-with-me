@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS requests
     event_id     BIGINT REFERENCES events (id) ON DELETE CASCADE,
     requester_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
     status       VARCHAR(120) NOT NULL,
-    created      TIMESTAMP    NOT NULL
+    created      TIMESTAMP    NOT NULL,
+    UNIQUE (event_id, requester_id)
 );
 
 CREATE TABLE IF NOT EXISTS compilations
@@ -58,3 +59,8 @@ CREATE TABLE IF NOT EXISTS compilations_events
     event_id       BIGINT REFERENCES events (id) ON DELETE CASCADE,
     PRIMARY KEY (compilation_id, event_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_events_event_date ON events (event_date);
+CREATE INDEX IF NOT EXISTS idx_events_category_id ON events (category_id);
+CREATE INDEX IF NOT EXISTS idx_events_category_state ON events (state);
+CREATE INDEX IF NOT EXISTS idx_events_category_paid ON events (paid);

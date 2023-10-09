@@ -10,8 +10,6 @@ import ru.practicum.request.model.RequestStatus;
 import java.util.List;
 
 public interface RequestRepository extends JpaRepository<Request, Long> {
-    Request findByRequesterIdAndEventId(Long userId, Long eventId);
-
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
     List<Request> findAllByRequesterId(Long userId);

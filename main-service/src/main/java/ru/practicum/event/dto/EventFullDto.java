@@ -7,40 +7,35 @@ import ru.practicum.event.model.EventState;
 import ru.practicum.location.dto.LocationDto;
 import ru.practicum.user.dto.UserShortDto;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventFullDto {
-    private Long id;
-    private String annotation;
+public class EventFullDto extends EventShortDto {
     private String description;
-    @NotNull
-    private String title;
-    @NotNull
-    private CategoryDto category;
-    private Long confirmedRequests;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;
-    @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime eventDate;
-    @NotNull
-    private UserShortDto initiator;
-    @NotNull
     private LocationDto location;
-    @NotNull
-    private Boolean paid;
-    @PositiveOrZero
     private Integer participantLimit;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
     private Boolean requestModeration;
     private EventState state;
-    private Long views;
+
+    @Builder
+    public EventFullDto(Long id, String annotation, CategoryDto category, Long confirmedRequests,
+                        LocalDateTime eventDate, UserShortDto initiator, Boolean paid, String title, Long views,
+                        LocalDateTime createdOn, String description, LocationDto location, Integer participantLimit,
+                        LocalDateTime publishedOn, Boolean requestModeration, EventState state) {
+        super(id, annotation, category, confirmedRequests, title, eventDate, initiator, paid, views);
+        this.createdOn = createdOn;
+        this.description = description;
+        this.location = location;
+        this.participantLimit = participantLimit;
+        this.publishedOn = publishedOn;
+        this.requestModeration = requestModeration;
+        this.state = state;
+    }
 }
