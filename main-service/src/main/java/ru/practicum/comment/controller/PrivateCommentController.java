@@ -39,8 +39,7 @@ public class PrivateCommentController {
     }
 
     @GetMapping("/{commentId}")
-    public ResponseEntity<CommentDto> getCommentByIdAndByUser(@PathVariable Long userId, @PathVariable Long commentId)
-    {
+    public ResponseEntity<CommentDto> getCommentByIdAndByUser(@PathVariable Long userId, @PathVariable Long commentId) {
         log.info("Получен GET запрос по эндпоинту '/users/{}/comments/{}' на получение comment", userId, commentId);
         return ResponseEntity.ok(commentService.getCommentByIdAndByUser(userId, commentId));
     }

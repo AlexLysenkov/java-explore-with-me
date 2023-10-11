@@ -29,7 +29,7 @@ public class PublicCommentController {
                                                                     @RequestParam(required = false, defaultValue = "0")
                                                                     @PositiveOrZero Integer from,
                                                                     @RequestParam(required = false, defaultValue = "10")
-                                                                        @Positive Integer size) {
+                                                                    @Positive Integer size) {
         log.info("Получен GET запрос по эндпоинту /events/{}/comments на получение comments по event с id {}",
                 eventId, eventId);
         return ResponseEntity.ok(commentService.getAllCommentsByEventId(eventId, from, size));
